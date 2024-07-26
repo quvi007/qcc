@@ -1,0 +1,642 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+#include "item.h"
+#include "symbol.h"
+#include "token.h"
+#include "grammar.h"
+#include "state.h"
+#include "automaton.h"
+
+#include "qlex.h"
+
+using namespace std;
+
+int main(int argc, char *argv[]) {
+    freopen("input.c", "r", stdin);
+
+    Token EM("$");
+    Token ID("ID");
+
+    Token SEMICOLON(";");
+    Token COMMA(",");
+    Token QUESTION("?");
+    Token COLON(":");
+    
+    Token NOT("!");
+    Token OROR("||");
+    Token ANDAND("&&");
+    
+    Token INVERT("~");
+    Token OR("|");
+    Token XOR("^");
+    Token AND("&");
+    
+    Token EQEQ("==");
+    Token NEQ("!=");
+
+    Token EQ("=");
+    Token MULEQ("*=");
+    Token DIVEQ("/=");
+    Token MODEQ("%=");
+    Token PLUSEQ("+=");
+    Token MINUSEQ("-=");
+    Token LSHIFTEQ("<<=");
+    Token RSHIFTEQ(">>=");
+    Token ANDEQ("&=");
+    Token XOREQ("^=");
+    Token OREQ("|=");
+    
+    Token LT("<");
+    Token GT(">");
+    Token LEQ("<=");
+    Token GEQ(">=");
+
+    Token LSHIFT("<<");
+    Token RSHIFT(">>");
+
+    Token PLUS("+");
+    Token MINUS("-");
+
+    Token MUL("*");
+    Token DIV("/");
+    Token MOD("%");
+
+    Token LPAREN("(");
+    Token RPAREN(")");
+
+    Token INCOP("++");
+    Token DECOP("--");
+
+    Token SIZEOF("SIZEOF");
+
+    Token LTHIRD("[");
+    Token RTHIRD("]");
+
+    Token LCURL("{");
+    Token RCURL("}");
+
+    Token DOT(".");
+    Token PDOP("->");
+
+    Token CONST_INT("CONST_INT");
+    Token CONST_FLOAT("CONST_FLOAT");
+    Token CONST_CHAR("CONST_CHAR");
+    Token CONST_STR("CONST_STR");
+
+    Token VOID("VOID");
+    Token CHAR("CHAR");
+    Token SHORT("SHORT");
+    Token INT("INT");
+    Token LONG("LONG");
+    Token FLOAT("FLOAT");
+    Token DOUBLE("DOUBLE");
+    Token SIGNED("SIGNED");
+    Token UNSIGNED("UNSIGNED");
+
+    Token CONST("CONST");
+    Token VOLATILE("VOLATILE");
+
+    Token STRUCT("STRUCT");
+    Token ENUM("ENUM");
+    Token UNION("UNION");
+
+    Token AUTO("AUTO");
+    Token REGISTER("REGISTER");
+    Token STATIC("STATIC");
+    Token EXTERN("EXTERN");
+    Token TYPEDEF("TYPEDEF");
+
+    Token CASE("CASE");
+    Token DEFAULT("DEFAULT");
+    Token IF("IF");
+    Token ELSE("ELSE");
+    Token SWITCH("SWITCH");
+    Token WHILE("WHILE");
+    Token DO("DO");
+    Token FOR("FOR");
+    Token GOTO("GOTO");
+    Token CONTINUE("CONTINUE");
+    Token BREAK("BREAK");
+    Token RETURN("RETURN");
+
+    Symbol TRANSLATION_UNIT_p("TRANSLATION_UNIT_p");
+    Symbol TRANSLATION_UNIT("TRANSLATION_UNIT");
+    Symbol EXTERNAL_DECLARATION("EXTERNAL_DECLARATION");
+    Symbol FUNCTION_DEFINITION("FUNCTION_DEFINITION");
+    Symbol DECLARATION("DECLARATION");
+    Symbol DECLARATION_SPECIFIERS("DECLARATION_SPECIFIERS");
+    Symbol DECLARATOR("DECLARATOR");
+    Symbol DECLARATION_LIST("DECLARATION_LIST");
+    Symbol INIT_DECLARATOR("INIT_DECLARATOR");
+    Symbol INIT_DECLARATOR_LIST("INIT_DECLARATOR_LIST");
+
+    Symbol STORAGE_CLASS_SPECIFIER("STORAGE_CLASS_SPECIFIER");
+    Symbol TYPE_SPECIFIER("TYPE_SPECIFIER");
+    Symbol TYPE_QUALIFIER("TYPE_QUALIFIER");
+    Symbol TYPE_QUALIFIER_LIST("TYPE_QUALIFIER_LIST");
+
+    Symbol STRUCT_OR_UNION_SPECIFIER("STRUCT_OR_UNION_SPECIFIER");
+    Symbol STRUCT_OR_UNION("STRUCT_OR_UNION");
+    Symbol STRUCT_DECLARATION("STRUCT_DECLARATION");
+    Symbol STRUCT_DECLARATION_LIST("STRUCT_DECLARATION_LIST");
+
+    Symbol SPECIFIER_QUALIFIER_LIST("SPECIFIER_QUALIFIER_LIST");
+
+    Symbol STRUCT_DECLARATOR("STRUCT_DECLARATOR");
+    Symbol STRUCT_DECLARATOR_LIST("STRUCT_DECLARATOR_LIST");
+
+    Symbol ENUM_SPECIFIER("ENUM_SPECIFIER");
+    Symbol ENUMERATOR_LIST("ENUMERATOR_LIST");
+    Symbol ENUMERATOR("ENUMERATOR");
+
+    Symbol DIRECT_DECLARATOR("DIRECT_DECLARATOR");
+    Symbol POINTER("POINTER");
+
+    Symbol PARAMETER_TYPE_LIST("PARAMETER_TYPE_LIST");
+    Symbol PARAMETER_LIST("PARAMETER_LIST");
+    Symbol PARAMETER_DECLARATION("PARAMETER_DECLARATION");
+
+    Symbol IDENTIFIER_LIST("IDENTIFIER_LIST");
+
+    Symbol INITIALIZER("INITIALIZER");
+    Symbol INITIALIZER_LIST("INITIALIZER_LIST");
+
+    Symbol ABSTRACT_DECLARATOR("ABSTRACT_DECLARATOR");
+    Symbol DIRECT_ABSTRACT_DECLARATOR("DIRECT_ABSTRACT_DECLARATOR");
+
+    Symbol TYPEDEF_NAME("TYPEDEF_NAME");
+
+    Symbol STATEMENT("STATEMENT");
+    Symbol LABELED_STATEMENT("LABELED_STATEMENT");
+    Symbol EXPRESSION_STATEMENT("EXPRESSION_STATEMENT");
+    Symbol COMPOUND_STATEMENT("COMPOUND_STATEMENT");
+    Symbol SELECTION_STATEMENT("SELECTION_STATEMENT");
+    Symbol ITERATION_STATEMENT("ITERATION_STATEMENT");
+    Symbol JUMP_STATEMENT("JUMP_STATEMENT");
+
+    Symbol TYPE_NAME("TYPE_NAME");
+    Symbol ASSIGNMENT_OPERATOR("ASSIGNMENT_OPERATOR");
+    Symbol UNARY_OPERATOR("UNARY_OPERATOR");
+    Symbol EXPRESSION("EXPRESSION");
+    Symbol ASSIGNMENT_EXPRESSION("ASSIGNMENT_EXPRESSION");
+    Symbol CONDITIONAL_EXPRESSION("CONDITIONAL_EXPRESSION");
+    Symbol LOGICAL_OR_EXPRESSION("LOGICAL_OR_EXPRESSION");
+    Symbol LOGICAL_AND_EXPRESSION("LOGICAL_AND_EXPRESSION");
+    Symbol CONSTANT_EXPRESSION("CONSTANT_EXPRESSION");
+    Symbol INCLUSIVE_OR_EXPRESSION("INCLUSIVE_OR_EXPRESSION");
+    Symbol EXCLUSIVE_OR_EXPRESSION("EXCLUSIVE_OR_EXPRESSION");
+    Symbol AND_EXPRESSION("AND_EXPRESSION");
+    Symbol EQUALITY_EXPRESSION("EQUALITY_EXPRESSION");
+    Symbol RELATIONAL_EXPRESSION("RELATIONAL_EXPRESSION");
+    Symbol SHIFT_EXPRESSION("SHIFT_EXPRESSION");
+    Symbol ADDITIVE_EXPRESSION("ADDITIVE_EXPRESSION");
+    Symbol MULTIPLICATIVE_EXPRESSION("MULTIPLICATIVE_EXPRESSION");
+    Symbol CAST_EXPRESSION("CAST_EXPRESSION");
+    Symbol UNARY_EXPRESSION("UNARY_EXPRESSION");
+    Symbol POSTFIX_EXPRESSION("POSTFIX_EXPRESSION");
+    Symbol PRIMARY_EXPRESSION("PRIMARY_EXPRESSION");
+    Symbol ARGUMENT_EXPRESSION_LIST("ARGUMENT_EXPRESSION_LIST");
+    Symbol IDENTIFIER("IDENTIFIER");
+    Symbol CONSTANT("CONSTANT");
+
+    // My Addition <3
+
+    Symbol STATEMENT_LIST("STATEMENT_LIST");
+    
+    vector<Item> items = {
+        Item(TRANSLATION_UNIT_p, {TRANSLATION_UNIT}),
+        
+        Item(TRANSLATION_UNIT, {EXTERNAL_DECLARATION}),
+        Item(TRANSLATION_UNIT, {TRANSLATION_UNIT, EXTERNAL_DECLARATION}),
+
+        Item(EXTERNAL_DECLARATION, {FUNCTION_DEFINITION}),
+        Item(EXTERNAL_DECLARATION, {DECLARATION}),
+
+        Item(FUNCTION_DEFINITION, {DECLARATOR, COMPOUND_STATEMENT}),
+        Item(FUNCTION_DEFINITION, {DECLARATOR, DECLARATION_LIST, COMPOUND_STATEMENT}),
+        Item(FUNCTION_DEFINITION, {DECLARATION_SPECIFIERS, DECLARATOR, COMPOUND_STATEMENT}),
+        Item(FUNCTION_DEFINITION, {DECLARATION_SPECIFIERS, DECLARATOR, DECLARATION_LIST, COMPOUND_STATEMENT}),
+
+        Item(DECLARATION, {DECLARATION_SPECIFIERS, SEMICOLON}),
+        Item(DECLARATION, {DECLARATION_SPECIFIERS, INIT_DECLARATOR_LIST, SEMICOLON}),
+
+        Item(DECLARATION_LIST, {DECLARATION}),
+        Item(DECLARATION_LIST, {DECLARATION_LIST, DECLARATION}),
+
+        Item(DECLARATION_SPECIFIERS, {STORAGE_CLASS_SPECIFIER}),
+        Item(DECLARATION_SPECIFIERS, {STORAGE_CLASS_SPECIFIER, DECLARATION_SPECIFIERS}),
+        Item(DECLARATION_SPECIFIERS, {TYPE_SPECIFIER}),
+        Item(DECLARATION_SPECIFIERS, {TYPE_SPECIFIER, DECLARATION_SPECIFIERS}),
+        Item(DECLARATION_SPECIFIERS, {TYPE_QUALIFIER}),
+        Item(DECLARATION_SPECIFIERS, {TYPE_QUALIFIER, DECLARATION_SPECIFIERS}),
+
+        Item(STORAGE_CLASS_SPECIFIER, {AUTO}),
+        Item(STORAGE_CLASS_SPECIFIER, {REGISTER}),
+        Item(STORAGE_CLASS_SPECIFIER, {STATIC}),
+        Item(STORAGE_CLASS_SPECIFIER, {EXTERN}),
+        Item(STORAGE_CLASS_SPECIFIER, {TYPEDEF}),
+
+        Item(TYPE_SPECIFIER, {VOID}), 
+        Item(TYPE_SPECIFIER, {CHAR}), 
+        Item(TYPE_SPECIFIER, {SHORT}), 
+        Item(TYPE_SPECIFIER, {INT}), 
+        Item(TYPE_SPECIFIER, {LONG}), 
+        Item(TYPE_SPECIFIER, {FLOAT}), 
+        Item(TYPE_SPECIFIER, {DOUBLE}), 
+        Item(TYPE_SPECIFIER, {SIGNED}), 
+        Item(TYPE_SPECIFIER, {UNSIGNED}), 
+        Item(TYPE_SPECIFIER, {STRUCT_OR_UNION_SPECIFIER}), 
+        Item(TYPE_SPECIFIER, {ENUM_SPECIFIER}), 
+        // Item(TYPE_SPECIFIER, {TYPEDEF_NAME}), 
+
+        Item(TYPE_QUALIFIER, {CONST}),
+        Item(TYPE_QUALIFIER, {VOLATILE}),
+
+        Item(STRUCT_OR_UNION_SPECIFIER, {STRUCT_OR_UNION, LCURL, STRUCT_DECLARATION_LIST, RCURL}),
+        Item(STRUCT_OR_UNION_SPECIFIER, {STRUCT_OR_UNION, IDENTIFIER, LCURL, STRUCT_DECLARATION_LIST, RCURL}),
+        Item(STRUCT_OR_UNION_SPECIFIER, {STRUCT_OR_UNION, IDENTIFIER}),
+
+        Item(STRUCT_OR_UNION, {STRUCT}),
+        Item(STRUCT_OR_UNION, {UNION}),
+
+        Item(STRUCT_DECLARATION_LIST, {STRUCT_DECLARATION}),
+        Item(STRUCT_DECLARATION_LIST, {STRUCT_DECLARATION_LIST, STRUCT_DECLARATION}),
+
+        Item(INIT_DECLARATOR_LIST, {INIT_DECLARATOR}),
+        Item(INIT_DECLARATOR_LIST, {INIT_DECLARATOR_LIST, COMMA, INIT_DECLARATOR}),
+
+        Item(INIT_DECLARATOR, {DECLARATOR}),
+        Item(INIT_DECLARATOR, {DECLARATOR, EQ, INITIALIZER}),
+
+        Item(STRUCT_DECLARATION, {SPECIFIER_QUALIFIER_LIST, STRUCT_DECLARATOR_LIST, SEMICOLON}),
+
+        Item(SPECIFIER_QUALIFIER_LIST, {TYPE_SPECIFIER}),
+        Item(SPECIFIER_QUALIFIER_LIST, {TYPE_SPECIFIER, SPECIFIER_QUALIFIER_LIST}),
+        Item(SPECIFIER_QUALIFIER_LIST, {TYPE_QUALIFIER}),
+        Item(SPECIFIER_QUALIFIER_LIST, {TYPE_QUALIFIER, SPECIFIER_QUALIFIER_LIST}),
+
+        Item(STRUCT_DECLARATOR_LIST, {STRUCT_DECLARATOR}),
+        Item(STRUCT_DECLARATOR_LIST, {STRUCT_DECLARATOR_LIST, COMMA, STRUCT_DECLARATOR}),
+
+        Item(STRUCT_DECLARATOR, {DECLARATOR}),
+        Item(STRUCT_DECLARATOR, {COLON, CONSTANT_EXPRESSION}),
+        Item(STRUCT_DECLARATOR, {DECLARATOR, COLON, CONSTANT_EXPRESSION}),
+
+        Item(ENUM_SPECIFIER, {ENUM, LCURL, ENUMERATOR_LIST, RCURL}),
+        Item(ENUM_SPECIFIER, {ENUM, IDENTIFIER, LCURL, ENUMERATOR_LIST, RCURL}),
+        Item(ENUM_SPECIFIER, {ENUM, IDENTIFIER}),
+
+        Item(ENUMERATOR_LIST, {ENUMERATOR}),
+        Item(ENUMERATOR_LIST, {ENUMERATOR_LIST, COMMA, ENUMERATOR}),
+
+        Item(ENUMERATOR, {IDENTIFIER}),
+        Item(ENUMERATOR, {IDENTIFIER, EQ, CONSTANT_EXPRESSION}),
+
+        Item(DECLARATOR, {DIRECT_DECLARATOR}),
+        Item(DECLARATOR, {POINTER, DIRECT_DECLARATOR}),
+
+        Item(DIRECT_DECLARATOR, {IDENTIFIER}),
+        Item(DIRECT_DECLARATOR, {LPAREN, DECLARATOR, RPAREN}),
+        Item(DIRECT_DECLARATOR, {DIRECT_DECLARATOR, LTHIRD, RTHIRD}),
+        Item(DIRECT_DECLARATOR, {DIRECT_DECLARATOR, LTHIRD, CONSTANT_EXPRESSION, RTHIRD}),
+        Item(DIRECT_DECLARATOR, {DIRECT_DECLARATOR, LPAREN, PARAMETER_TYPE_LIST, RPAREN}),
+        Item(DIRECT_DECLARATOR, {DIRECT_DECLARATOR, LPAREN, RPAREN}),
+        Item(DIRECT_DECLARATOR, {DIRECT_DECLARATOR, LPAREN, IDENTIFIER_LIST, RPAREN}),
+
+        Item(POINTER, {MUL}),
+        Item(POINTER, {MUL, TYPE_QUALIFIER_LIST}),
+        Item(POINTER, {MUL, POINTER}),
+        Item(POINTER, {MUL, TYPE_QUALIFIER_LIST, POINTER}),
+
+        Item(TYPE_QUALIFIER_LIST, {TYPE_QUALIFIER}),
+        Item(TYPE_QUALIFIER_LIST, {TYPE_QUALIFIER_LIST, TYPE_QUALIFIER}),
+
+        Item(PARAMETER_TYPE_LIST, {PARAMETER_LIST}),
+        Item(PARAMETER_TYPE_LIST, {PARAMETER_LIST, COMMA, DOT, DOT, DOT}),
+
+        Item(PARAMETER_LIST, {PARAMETER_DECLARATION}),
+        Item(PARAMETER_LIST, {PARAMETER_LIST, COMMA, PARAMETER_DECLARATION}),
+
+        Item(PARAMETER_DECLARATION, {DECLARATION_SPECIFIERS, DECLARATOR}),
+        Item(PARAMETER_DECLARATION, {DECLARATION_SPECIFIERS}),
+        Item(PARAMETER_DECLARATION, {DECLARATION_SPECIFIERS, ABSTRACT_DECLARATOR}),
+
+        Item(IDENTIFIER_LIST, {IDENTIFIER}),
+        Item(IDENTIFIER_LIST, {IDENTIFIER_LIST, COMMA, IDENTIFIER}),
+
+        Item(IDENTIFIER, {ID}),
+
+        Item(INITIALIZER, {ASSIGNMENT_EXPRESSION}),
+        Item(INITIALIZER, {LCURL, INITIALIZER_LIST, RCURL}),
+        Item(INITIALIZER, {LCURL, INITIALIZER_LIST, COMMA, RCURL}),
+
+        Item(INITIALIZER_LIST, {INITIALIZER}),
+        Item(INITIALIZER_LIST, {INITIALIZER_LIST, COMMA, INITIALIZER}),
+
+        Item(TYPE_NAME, {SPECIFIER_QUALIFIER_LIST}),
+        Item(TYPE_NAME, {SPECIFIER_QUALIFIER_LIST, ABSTRACT_DECLARATOR}),
+
+        Item(ABSTRACT_DECLARATOR, {POINTER}),
+        Item(ABSTRACT_DECLARATOR, {DIRECT_ABSTRACT_DECLARATOR}),
+        Item(ABSTRACT_DECLARATOR, {POINTER, DIRECT_ABSTRACT_DECLARATOR}),
+
+        Item(DIRECT_ABSTRACT_DECLARATOR, {LPAREN, ABSTRACT_DECLARATOR, RPAREN}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {LTHIRD, RTHIRD}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {LTHIRD, CONSTANT_EXPRESSION, RTHIRD}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {DIRECT_ABSTRACT_DECLARATOR, LTHIRD, RTHIRD}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {DIRECT_ABSTRACT_DECLARATOR, LTHIRD, CONSTANT_EXPRESSION, RTHIRD}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {LPAREN, RPAREN}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {LPAREN, PARAMETER_TYPE_LIST, RPAREN}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {DIRECT_ABSTRACT_DECLARATOR, LPAREN, RPAREN}),
+        Item(DIRECT_ABSTRACT_DECLARATOR, {DIRECT_ABSTRACT_DECLARATOR, LPAREN, PARAMETER_TYPE_LIST, RPAREN}),
+
+        // Item(TYPEDEF_NAME, {IDENTIFIER}),
+
+        Item(STATEMENT, {DECLARATION}),
+        Item(STATEMENT, {LABELED_STATEMENT}),
+        Item(STATEMENT, {EXPRESSION_STATEMENT}),
+        Item(STATEMENT, {COMPOUND_STATEMENT}),
+        Item(STATEMENT, {SELECTION_STATEMENT}),
+        Item(STATEMENT, {ITERATION_STATEMENT}),
+        Item(STATEMENT, {JUMP_STATEMENT}),
+
+        Item(LABELED_STATEMENT, {IDENTIFIER, COLON, STATEMENT}),
+        Item(LABELED_STATEMENT, {CASE, CONSTANT_EXPRESSION, COLON, STATEMENT}),
+        Item(LABELED_STATEMENT, {DEFAULT, COLON, STATEMENT}),
+
+        Item(EXPRESSION_STATEMENT, {SEMICOLON}),
+        Item(EXPRESSION_STATEMENT, {EXPRESSION, SEMICOLON}),
+
+        Item(COMPOUND_STATEMENT, {LCURL, RCURL}),
+        Item(COMPOUND_STATEMENT, {LCURL, STATEMENT_LIST, RCURL}),
+
+        Item(SELECTION_STATEMENT, {IF, LPAREN, EXPRESSION, RPAREN, STATEMENT}),
+        Item(SELECTION_STATEMENT, {SWITCH, LPAREN, EXPRESSION, RPAREN, STATEMENT}),
+
+        Item(ITERATION_STATEMENT, {WHILE, LPAREN, EXPRESSION, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {DO, STATEMENT, WHILE, LPAREN, EXPRESSION, RPAREN, SEMICOLON}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, SEMICOLON, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, SEMICOLON, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, SEMICOLON, EXPRESSION, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, SEMICOLON, EXPRESSION, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, EXPRESSION, SEMICOLON, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, EXPRESSION, SEMICOLON, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, EXPRESSION, SEMICOLON, EXPRESSION, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, EXPRESSION, SEMICOLON, EXPRESSION, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+
+        // my addition
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, DECLARATION, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, DECLARATION, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, DECLARATION, EXPRESSION, SEMICOLON, RPAREN, STATEMENT}),
+        Item(ITERATION_STATEMENT, {FOR, LPAREN, DECLARATION, EXPRESSION, SEMICOLON, EXPRESSION, RPAREN, STATEMENT}),
+
+        Item(JUMP_STATEMENT, {GOTO, IDENTIFIER, SEMICOLON}),
+        Item(JUMP_STATEMENT, {CONTINUE, SEMICOLON}),
+        Item(JUMP_STATEMENT, {BREAK, SEMICOLON}),
+        Item(JUMP_STATEMENT, {RETURN, SEMICOLON}),
+        Item(JUMP_STATEMENT, {RETURN, EXPRESSION, SEMICOLON}),
+
+        Item(EXPRESSION, {ASSIGNMENT_EXPRESSION}),
+        Item(EXPRESSION, {EXPRESSION, COMMA, ASSIGNMENT_EXPRESSION}),
+        
+        Item(ASSIGNMENT_EXPRESSION, {CONDITIONAL_EXPRESSION}),
+        Item(ASSIGNMENT_EXPRESSION, {UNARY_EXPRESSION, ASSIGNMENT_OPERATOR, ASSIGNMENT_EXPRESSION}),
+        
+        Item(ASSIGNMENT_OPERATOR, {EQ}),
+        Item(ASSIGNMENT_OPERATOR, {MULEQ}), 
+        Item(ASSIGNMENT_OPERATOR, {DIVEQ}),
+        Item(ASSIGNMENT_OPERATOR, {MODEQ}),
+        Item(ASSIGNMENT_OPERATOR, {PLUSEQ}), 
+        Item(ASSIGNMENT_OPERATOR, {MINUSEQ}),
+        Item(ASSIGNMENT_OPERATOR, {LSHIFTEQ}),
+        Item(ASSIGNMENT_OPERATOR, {RSHIFTEQ}),
+        Item(ASSIGNMENT_OPERATOR, {ANDEQ}),
+        Item(ASSIGNMENT_OPERATOR, {XOREQ}),
+        Item(ASSIGNMENT_OPERATOR, {OREQ}),
+        
+        Item(CONDITIONAL_EXPRESSION, {LOGICAL_OR_EXPRESSION}),
+        Item(CONDITIONAL_EXPRESSION, {LOGICAL_OR_EXPRESSION, QUESTION, EXPRESSION, COLON, CONDITIONAL_EXPRESSION}),
+        
+        Item(CONSTANT_EXPRESSION, {CONDITIONAL_EXPRESSION}),
+        
+        Item(LOGICAL_OR_EXPRESSION, {LOGICAL_AND_EXPRESSION}),
+        Item(LOGICAL_OR_EXPRESSION, {LOGICAL_OR_EXPRESSION, OROR, LOGICAL_AND_EXPRESSION}),
+        
+        Item(LOGICAL_AND_EXPRESSION, {INCLUSIVE_OR_EXPRESSION}),
+        Item(LOGICAL_AND_EXPRESSION, {LOGICAL_AND_EXPRESSION, ANDAND, INCLUSIVE_OR_EXPRESSION}),
+        
+        Item(INCLUSIVE_OR_EXPRESSION, {EXCLUSIVE_OR_EXPRESSION}),
+        Item(INCLUSIVE_OR_EXPRESSION, {INCLUSIVE_OR_EXPRESSION, OR, EXCLUSIVE_OR_EXPRESSION}),
+        
+        Item(EXCLUSIVE_OR_EXPRESSION, {AND_EXPRESSION}),
+        Item(EXCLUSIVE_OR_EXPRESSION, {EXCLUSIVE_OR_EXPRESSION, XOR, AND_EXPRESSION}),
+        
+        Item(AND_EXPRESSION, {EQUALITY_EXPRESSION}),
+        Item(AND_EXPRESSION, {AND_EXPRESSION, AND, EQUALITY_EXPRESSION}),
+        
+        Item(EQUALITY_EXPRESSION, {RELATIONAL_EXPRESSION}),
+        Item(EQUALITY_EXPRESSION, {EQUALITY_EXPRESSION, EQEQ, RELATIONAL_EXPRESSION}),
+        Item(EQUALITY_EXPRESSION, {EQUALITY_EXPRESSION, NEQ, RELATIONAL_EXPRESSION}),
+
+        Item(RELATIONAL_EXPRESSION, {SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, LT, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, GT, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, LEQ, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, GEQ, SHIFT_EXPRESSION}),
+    
+        Item(SHIFT_EXPRESSION, {ADDITIVE_EXPRESSION}),
+        Item(SHIFT_EXPRESSION, {SHIFT_EXPRESSION, LSHIFT, ADDITIVE_EXPRESSION}),
+        Item(SHIFT_EXPRESSION, {SHIFT_EXPRESSION, RSHIFT, ADDITIVE_EXPRESSION}),
+
+        Item(ADDITIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION}),
+        Item(ADDITIVE_EXPRESSION, {ADDITIVE_EXPRESSION, PLUS, MULTIPLICATIVE_EXPRESSION}),
+        Item(ADDITIVE_EXPRESSION, {ADDITIVE_EXPRESSION, MINUS, MULTIPLICATIVE_EXPRESSION}),
+
+        Item(MULTIPLICATIVE_EXPRESSION, {CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, MUL, CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, DIV, CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, MOD, CAST_EXPRESSION}),
+
+        Item(CAST_EXPRESSION, {UNARY_EXPRESSION}),
+        Item(CAST_EXPRESSION, {LPAREN, TYPE_NAME, RPAREN, CAST_EXPRESSION}),
+
+        Item(UNARY_EXPRESSION, {POSTFIX_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {INCOP, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {DECOP, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {UNARY_OPERATOR, CAST_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {SIZEOF, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {SIZEOF, LPAREN, TYPE_NAME, RPAREN}),
+
+        Item(UNARY_OPERATOR, {AND}),
+        Item(UNARY_OPERATOR, {MUL}),
+        Item(UNARY_OPERATOR, {PLUS}),
+        Item(UNARY_OPERATOR, {MINUS}),
+        Item(UNARY_OPERATOR, {INVERT}),
+        Item(UNARY_OPERATOR, {NOT}),
+
+        Item(POSTFIX_EXPRESSION, {PRIMARY_EXPRESSION}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LTHIRD, EXPRESSION, RTHIRD}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LPAREN, RPAREN}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LPAREN, ARGUMENT_EXPRESSION_LIST, RPAREN}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, DOT, IDENTIFIER}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, PDOP, IDENTIFIER}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, INCOP}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, DECOP}),
+
+        Item(PRIMARY_EXPRESSION, {IDENTIFIER}),
+        Item(PRIMARY_EXPRESSION, {CONSTANT}),
+        Item(PRIMARY_EXPRESSION, {LPAREN, EXPRESSION, RPAREN}),
+
+        Item(ARGUMENT_EXPRESSION_LIST, {ASSIGNMENT_EXPRESSION}),
+        Item(ARGUMENT_EXPRESSION_LIST, {ARGUMENT_EXPRESSION_LIST, COMMA, ASSIGNMENT_EXPRESSION}),
+
+        Item(CONSTANT, {CONST_INT}),
+        Item(CONSTANT, {CONST_FLOAT}),
+        Item(CONSTANT, {CONST_CHAR}),
+        Item(CONSTANT, {CONST_STR}),
+
+        Item(STATEMENT_LIST, {STATEMENT}),
+        Item(STATEMENT_LIST, {STATEMENT_LIST, STATEMENT}),
+    };
+    
+    Grammar g(items);
+
+    // cout << "FOLLOW:\n";
+    // for (const Symbol &symbol : g.getFollow(STATEMENT)) {
+    //     cout << symbol << ", ";
+    // }
+    // cout << "\n";
+
+    // for (const Item &item : g.getItems()) {
+    //     cout << item << "\n";
+    // }
+
+    // int cnt = 0;
+    // for (const Symbol &symbol : g.getSymbols()) {
+    //     cout << ++cnt << ": " << symbol << "\n";
+    // }
+
+    State *startingState = new State(0, {items[0]}, g);
+
+    Automaton automaton(startingState, g);
+
+    // cout << automaton << "\n";
+
+    map<pair<int, string>, const State *> stateTable = automaton.getStateTable();
+    map<pair<int, string>, int> ruleTable = automaton.getRuleTable();
+    map<pair<int, string>, string> actionTable = automaton.getActionTable();
+
+    vector<Symbol> symbols;
+    vector<Symbol> grammarSymbols = g.getSymbols();
+    for (int i = 1; i < grammarSymbols.size(); ++i) {
+        symbols.push_back(grammarSymbols[i]);
+    }
+    symbols.push_back(EM);
+
+    /*
+    vector<Symbol> headSymbols, tokenSymbols;
+    for (const Symbol &symbol : symbols) {
+        if (symbol.isToken())
+            tokenSymbols.push_back(symbol);
+        else headSymbols.push_back(symbol);
+    }
+
+    cout << "\t";
+    
+    for (const Symbol &symbol : tokenSymbols) {
+        cout << symbol << "\t";
+    }
+
+    for (const Symbol &symbol : headSymbols) {
+        cout << symbol << "\t";
+    }
+
+    cout << "\n";
+
+    for (const State *state : {automaton.getStates()[109]}) {
+        cout << state->getId() << "\t";
+        for (const Symbol &symbol : tokenSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+
+            if (action == "s") {
+                const State *nextState = stateTable[key];
+                cout << action << nextState->getId() << "\t";
+            } else if (action == "r") {
+                int rule = ruleTable[key];
+                cout << "(" << symbol << ", " << action << rule << ")\t";
+            } else {
+                cout << "\t";
+            }
+        }
+
+        for (const Symbol &symbol : headSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+            const State *nextState = stateTable[key];
+
+            if (nextState)
+                cout << action << nextState->getId() << "\t";
+            else cout << "\t";
+        }
+
+        cout << "\n";
+    }
+    */
+
+    // return 0;
+
+    const State *currState = startingState;
+
+    vector<Token> inputTokens = getTokens();
+    for (const Token &token : inputTokens) {
+        cout << (Symbol)token;
+    }
+    cout << "\n";
+
+    stack<int> stateIdStack;
+    queue<Token> tokenQueue;
+
+    stateIdStack.push(startingState->getId());
+    for (const Token &token : inputTokens) {
+        tokenQueue.push(token);
+    }
+
+    Token a = tokenQueue.front();
+    while (true) {
+        int topStateId = stateIdStack.top();
+        pair<int, string> key = make_pair(topStateId, a.getName());
+
+        if (actionTable[key] == "s") {
+            int nextStateId = stateTable[key]->getId();
+            stateIdStack.push(nextStateId);
+            // cout << "shift " << a << "\n";
+            tokenQueue.pop();
+            a = tokenQueue.front();
+            // cout << "shift to " << nextStateId << "\n";
+            // cout << "shift\n";
+        } else if (actionTable[key] == "r") {
+            if (ruleTable[key] == 0) {
+                cout << "accepted\n";
+                break;
+            } else {
+                Item item = g.getItems()[ruleTable[key]];
+                // cout << "reduce by " << item << "\n";
+                
+                for (int i = 0; i < item.getBody().size(); ++i)
+                    stateIdStack.pop();
+                int newTopStateId = stateIdStack.top();
+                pair<int, string> newKey = make_pair(newTopStateId, item.getHead().getName());
+                stateIdStack.push(stateTable[newKey]->getId());
+            }
+        } else {
+            cerr << "error seeing " << a << "\n";
+            break;
+        }
+    }
+
+    return 0;
+}

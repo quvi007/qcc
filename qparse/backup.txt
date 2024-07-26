@@ -1,0 +1,136 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#include "item.h"
+#include "symbol.h"
+#include "token.h"
+#include "grammar.h"
+#include "state.h"
+#include "automaton.h"
+
+using namespace std;
+
+int main(int argc, char *argv[]) {
+    Symbol L_p("L\'");
+    Symbol L("L");
+    Symbol T("T");
+    Token LPAREN("(");
+    Token RPAREN(")");
+    Token EM("$");
+
+    vector<Item> items = {
+        Item(L_p, {L}, 0),
+        Item(L, {L, T}, 0),
+        Item(L, {T}, 0),
+        Item(T, {LPAREN, L, RPAREN}, 0),
+        Item(T, {LPAREN, RPAREN}, 0)
+    };
+    
+    vector<Symbol> symbols = {
+        L, T, LPAREN, RPAREN, EM
+    };
+
+    Grammar g(items);
+
+    State *startingState = new State(0, {Item(L_p, {L}, 0)}, g);
+
+    Automaton automaton(startingState, g);
+
+    map<pair<int, string>, const State *> stateTable = automaton.getStateTable();
+    map<pair<int, string>, int> ruleTable = automaton.getRuleTable();
+    map<pair<int, string>, string> actionTable = automaton.getActionTable();
+
+    vector<Symbol> headSymbols, tokenSymbols;
+    for (const Symbol &symbol : symbols) {
+        if (symbol.isToken())
+            tokenSymbols.push_back(symbol);
+        else headSymbols.push_back(symbol);
+    }
+
+    cout << "\t";
+    
+    for (const Symbol &symbol : tokenSymbols) {
+        cout << symbol << "\t";
+    }
+
+    for (const Symbol &symbol : headSymbols) {
+        cout << symbol << "\t";
+    }
+
+    cout << "\n";
+
+    for (const State *state : automaton.getStates()) {
+        cout << state->getId() << "\t";
+        for (const Symbol &symbol : tokenSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+
+            if (action == "s") {
+                const State *nextState = stateTable[key];
+                cout << action << nextState->getId() << "\t";
+            } else if (action == "r") {
+                int rule = ruleTable[key];
+                cout << action << rule << "\t";
+            } else {
+                cout << "\t";
+            }
+        }
+
+        for (const Symbol &symbol : headSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+            const State *nextState = stateTable[key];
+
+            if (nextState)
+                cout << action << nextState->getId() << "\t";
+            else cout << "\t";
+        }
+
+        cout << "\n";
+    }
+
+    const State *currState = startingState;
+    
+    vector<Token> inputTokens = {LPAREN, LPAREN, RPAREN, LPAREN, RPAREN, RPAREN, EM};
+    
+    stack<int> stateIdStack;
+    queue<Token> tokenQueue;
+
+    stateIdStack.push(startingState->getId());
+    for (const Token &token : inputTokens) {
+        tokenQueue.push(token);
+    }
+
+    Token a = tokenQueue.front();
+    while (true) {
+        int topStateId = stateIdStack.top();
+        pair<int, string> key = make_pair(topStateId, a.getName());
+        if (actionTable[key] == "s") {
+            int nextStateId = stateTable[key]->getId();
+            stateIdStack.push(nextStateId);
+            tokenQueue.pop();
+            a = tokenQueue.front();
+            // cout << "shift to " << nextStateId << "\n";
+            cout << "shift\n";
+        } else if (actionTable[key] == "r") {
+            if (ruleTable[key] == 0) {
+                cout << "accepted\n";
+                break;
+            } else {
+                Item item = g.getItems()[ruleTable[key]];
+                for (int i = 0; i < item.getBody().size(); ++i)
+                    stateIdStack.pop();
+                int newTopStateId = stateIdStack.top();
+                pair<int, string> newKey = make_pair(newTopStateId, item.getHead().getName());
+                stateIdStack.push(stateTable[newKey]->getId());
+                cout << "reduce by " << item << "\n";
+            }
+        } else {
+            cerr << "error\n";
+            break;
+        }
+    }
+
+    return 0;
+}

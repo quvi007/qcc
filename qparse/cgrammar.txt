@@ -1,0 +1,333 @@
+#include <iostream>
+#include <vector>
+#include <stack>
+
+#include "item.h"
+#include "symbol.h"
+#include "token.h"
+#include "grammar.h"
+#include "state.h"
+#include "automaton.h"
+
+using namespace std;
+
+int main(int argc, char *argv[]) {
+    Token EM("$");
+    Token ID("id");
+
+    Token COMMA(",");
+    Token QUESTION("?");
+    Token COLON(":");
+    
+    Token NOT("!");
+    Token OROR("||");
+    Token ANDAND("&&");
+    
+    Token INVERT("~");
+    Token OR("|");
+    Token XOR("^");
+    Token AND("&");
+    
+    Token EQEQ("==");
+    Token NEQ("!=");
+
+    Token EQ("=");
+    Token MULEQ("*=");
+    Token DIVEQ("/=");
+    Token MODEQ("%=");
+    Token PLUSEQ("+=");
+    Token MINUSEQ("*=");
+    Token LSHIFTEQ("<<=");
+    Token RSHIFTEQ(">>=");
+    Token ANDEQ("&=");
+    Token XOREQ("^=");
+    Token OREQ("|=");
+    
+    Token LT("<");
+    Token GT(">");
+    Token LEQ("<=");
+    Token GEQ(">=");
+
+    Token LSHIFT("<<");
+    Token RSHIFT(">>");
+
+    Token PLUS("+");
+    Token MINUS("-");
+
+    Token MUL("*");
+    Token DIV("/");
+    Token MOD("%");
+
+    Token LPAREN("(");
+    Token RPAREN(")");
+
+    Token INCOP("++");
+    Token DECOP("--");
+
+    Token SIZEOF("SIZEOF");
+
+    Token LTHIRD("[");
+    Token RTHIRD("]");
+
+    Token DOT(".");
+    Token PDOP("->");
+
+    Token CONST_INT("CONST_INT");
+    Token CONST_FLOAT("CONST_FLOAT");
+    Token CONST_CHAR("CONST_CHAR");
+    Token CONST_STR("CONST_STR");
+
+    Token INT("INT");
+    Token FLOAT("FLOAT");
+    Token DOUBLE("DOUBLE");
+    Token CHAR("CHAR");
+
+    Symbol EXPRESSION_P("EXPRESSION_P");
+    Symbol TYPE_NAME("TYPE_NAME");
+    Symbol ASSIGNMENT_OPERATOR("ASSIGNMENT_OPERATOR");
+    Symbol UNARY_OPERATOR("UNARY_OPERATOR");
+    Symbol EXPRESSION("EXPRESSION");
+    Symbol ASSIGNMENT_EXPRESSION("ASSIGNMENT_EXPRESSION");
+    Symbol CONDITIONAL_EXPRESSION("CONDITIONAL_EXPRESSION");
+    Symbol LOGICAL_OR_EXPRESSION("LOGICAL_OR_EXPRESSION");
+    Symbol LOGICAL_AND_EXPRESSION("LOGICAL_AND_EXPRESSION");
+    Symbol CONSTANT_EXPRESSION("CONSTANT_EXPRESSION");
+    Symbol INCLUSIVE_OR_EXPRESSION("INCLUSIVE_OR_EXPRESSION");
+    Symbol EXCLUSIVE_OR_EXPRESSION("EXCLUSIVE_OR_EXPRESSION");
+    Symbol AND_EXPRESSION("AND_EXPRESSION");
+    Symbol EQUALITY_EXPRESSION("EQUALITY_EXPRESSION");
+    Symbol RELATIONAL_EXPRESSION("RELATIONAL_EXPRESSION");
+    Symbol SHIFT_EXPRESSION("SHIFT_EXPRESSION");
+    Symbol ADDITIVE_EXPRESSION("ADDITIVE_EXPRESSION");
+    Symbol MULTIPLICATIVE_EXPRESSION("MULTIPLICATIVE_EXPRESSION");
+    Symbol CAST_EXPRESSION("CAST_EXPRESSION");
+    Symbol UNARY_EXPRESSION("UNARY_EXPRESSION");
+    Symbol POSTFIX_EXPRESSION("POSTFIX_EXPRESSION");
+    Symbol PRIMARY_EXPRESSION("PRIMARY_EXPRESSION");
+    Symbol ARGUMENT_EXPRESSION_LIST("ARGUMENT_EXPRESSION_LIST");
+    Symbol IDENTIFIER("IDENTIFIER");
+    Symbol CONSTANT("CONSTANT");
+
+    vector<Item> items = {
+        Item(EXPRESSION_P, {EXPRESSION}),
+        Item(EXPRESSION, {ASSIGNMENT_EXPRESSION}),
+        Item(EXPRESSION, {EXPRESSION, COMMA, ASSIGNMENT_EXPRESSION}),
+        
+        Item(ASSIGNMENT_EXPRESSION, {CONDITIONAL_EXPRESSION}),
+        Item(ASSIGNMENT_EXPRESSION, {UNARY_EXPRESSION, ASSIGNMENT_OPERATOR, ASSIGNMENT_EXPRESSION}),
+        
+        Item(ASSIGNMENT_OPERATOR, {EQ}),
+        Item(ASSIGNMENT_OPERATOR, {MULEQ}), 
+        Item(ASSIGNMENT_OPERATOR, {DIVEQ}),
+        Item(ASSIGNMENT_OPERATOR, {MODEQ}),
+        Item(ASSIGNMENT_OPERATOR, {PLUSEQ}), 
+        Item(ASSIGNMENT_OPERATOR, {MINUSEQ}),
+        Item(ASSIGNMENT_OPERATOR, {LSHIFTEQ}),
+        Item(ASSIGNMENT_OPERATOR, {RSHIFTEQ}),
+        Item(ASSIGNMENT_OPERATOR, {ANDEQ}),
+        Item(ASSIGNMENT_OPERATOR, {XOREQ}),
+        Item(ASSIGNMENT_OPERATOR, {OREQ}),
+        
+        Item(CONDITIONAL_EXPRESSION, {LOGICAL_OR_EXPRESSION}),
+        Item(CONDITIONAL_EXPRESSION, {LOGICAL_OR_EXPRESSION, QUESTION, EXPRESSION, COLON, CONDITIONAL_EXPRESSION}),
+        
+        Item(CONSTANT_EXPRESSION, {CONDITIONAL_EXPRESSION}),
+        
+        Item(LOGICAL_OR_EXPRESSION, {LOGICAL_AND_EXPRESSION}),
+        Item(LOGICAL_OR_EXPRESSION, {LOGICAL_OR_EXPRESSION, OROR, LOGICAL_AND_EXPRESSION}),
+        
+        Item(LOGICAL_AND_EXPRESSION, {INCLUSIVE_OR_EXPRESSION}),
+        Item(LOGICAL_AND_EXPRESSION, {LOGICAL_AND_EXPRESSION, ANDAND, INCLUSIVE_OR_EXPRESSION}),
+        
+        Item(INCLUSIVE_OR_EXPRESSION, {EXCLUSIVE_OR_EXPRESSION}),
+        Item(INCLUSIVE_OR_EXPRESSION, {INCLUSIVE_OR_EXPRESSION, OR, EXCLUSIVE_OR_EXPRESSION}),
+        
+        Item(EXCLUSIVE_OR_EXPRESSION, {AND_EXPRESSION}),
+        Item(EXCLUSIVE_OR_EXPRESSION, {EXCLUSIVE_OR_EXPRESSION, XOR, AND_EXPRESSION}),
+        
+        Item(AND_EXPRESSION, {EQUALITY_EXPRESSION}),
+        Item(AND_EXPRESSION, {AND_EXPRESSION, AND, EQUALITY_EXPRESSION}),
+        
+        Item(EQUALITY_EXPRESSION, {RELATIONAL_EXPRESSION}),
+        Item(EQUALITY_EXPRESSION, {EQUALITY_EXPRESSION, EQEQ, RELATIONAL_EXPRESSION}),
+        Item(EQUALITY_EXPRESSION, {EQUALITY_EXPRESSION, NEQ, RELATIONAL_EXPRESSION}),
+
+        Item(RELATIONAL_EXPRESSION, {SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, LT, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, GT, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, LEQ, SHIFT_EXPRESSION}),
+        Item(RELATIONAL_EXPRESSION, {RELATIONAL_EXPRESSION, GEQ, SHIFT_EXPRESSION}),
+    
+        Item(SHIFT_EXPRESSION, {ADDITIVE_EXPRESSION}),
+        Item(SHIFT_EXPRESSION, {SHIFT_EXPRESSION, LSHIFT, ADDITIVE_EXPRESSION}),
+        Item(SHIFT_EXPRESSION, {SHIFT_EXPRESSION, RSHIFT, ADDITIVE_EXPRESSION}),
+
+        Item(ADDITIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION}),
+        Item(ADDITIVE_EXPRESSION, {ADDITIVE_EXPRESSION, PLUS, MULTIPLICATIVE_EXPRESSION}),
+        Item(ADDITIVE_EXPRESSION, {ADDITIVE_EXPRESSION, MINUS, MULTIPLICATIVE_EXPRESSION}),
+
+        Item(MULTIPLICATIVE_EXPRESSION, {CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, MUL, CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, DIV, CAST_EXPRESSION}),
+        Item(MULTIPLICATIVE_EXPRESSION, {MULTIPLICATIVE_EXPRESSION, MOD, CAST_EXPRESSION}),
+
+        Item(CAST_EXPRESSION, {UNARY_EXPRESSION}),
+        Item(CAST_EXPRESSION, {LPAREN, TYPE_NAME, RPAREN, CAST_EXPRESSION}),
+
+        Item(UNARY_EXPRESSION, {POSTFIX_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {INCOP, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {DECOP, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {UNARY_OPERATOR, CAST_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {SIZEOF, UNARY_EXPRESSION}),
+        Item(UNARY_EXPRESSION, {SIZEOF, LPAREN, TYPE_NAME, RPAREN}),
+
+        Item(UNARY_OPERATOR, {AND}),
+        Item(UNARY_OPERATOR, {MUL}),
+        Item(UNARY_OPERATOR, {PLUS}),
+        Item(UNARY_OPERATOR, {MINUS}),
+        Item(UNARY_OPERATOR, {INVERT}),
+        Item(UNARY_OPERATOR, {NOT}),
+
+        Item(POSTFIX_EXPRESSION, {PRIMARY_EXPRESSION}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LTHIRD, EXPRESSION, RTHIRD}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LPAREN, RPAREN}),
+        // Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, LPAREN, ARGUMENT_EXPRESSION_LIST, RPAREN}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, DOT, IDENTIFIER}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, PDOP, IDENTIFIER}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, INCOP}),
+        Item(POSTFIX_EXPRESSION, {POSTFIX_EXPRESSION, DECOP}),
+
+        Item(PRIMARY_EXPRESSION, {ID}),
+        Item(PRIMARY_EXPRESSION, {CONSTANT}),
+        Item(PRIMARY_EXPRESSION, {LPAREN, EXPRESSION, RPAREN}),
+
+        Item(ARGUMENT_EXPRESSION_LIST, {ASSIGNMENT_EXPRESSION}),
+        Item(ARGUMENT_EXPRESSION_LIST, {ARGUMENT_EXPRESSION_LIST, COMMA, ASSIGNMENT_EXPRESSION}),
+
+        Item(CONSTANT, {CONST_INT}),
+        Item(CONSTANT, {CONST_FLOAT}),
+        Item(CONSTANT, {CONST_CHAR}),
+        Item(CONSTANT, {CONST_STR}),
+
+        Item(TYPE_NAME, {INT}),
+        Item(TYPE_NAME, {FLOAT}),
+        Item(TYPE_NAME, {DOUBLE}),
+        Item(TYPE_NAME, {CHAR}),
+    };
+    
+    Grammar g(items);
+
+    // for (const Item &item : g.getItems()) {
+    //     cout << item << "\n";
+    // }
+
+    State *startingState = new State(0, {Item(EXPRESSION_P, {EXPRESSION})}, g);
+
+    Automaton automaton(startingState, g);
+
+    map<pair<int, string>, const State *> stateTable = automaton.getStateTable();
+    map<pair<int, string>, int> ruleTable = automaton.getRuleTable();
+    map<pair<int, string>, string> actionTable = automaton.getActionTable();
+
+    vector<Symbol> symbols;
+    vector<Symbol> grammarSymbols = g.getSymbols();
+    for (int i = 1; i < grammarSymbols.size(); ++i) {
+        symbols.push_back(grammarSymbols[i]);
+    }
+    symbols.push_back(EM);
+
+    /*
+    vector<Symbol> headSymbols, tokenSymbols;
+    for (const Symbol &symbol : symbols) {
+        if (symbol.isToken())
+            tokenSymbols.push_back(symbol);
+        else headSymbols.push_back(symbol);
+    }
+
+    cout << "\t";
+    
+    for (const Symbol &symbol : tokenSymbols) {
+        cout << symbol << "\t";
+    }
+
+    for (const Symbol &symbol : headSymbols) {
+        cout << symbol << "\t";
+    }
+
+    cout << "\n";
+
+    for (const State *state : automaton.getStates()) {
+        cout << state->getId() << "\t";
+        for (const Symbol &symbol : tokenSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+
+            if (action == "s") {
+                const State *nextState = stateTable[key];
+                cout << action << nextState->getId() << "\t";
+            } else if (action == "r") {
+                int rule = ruleTable[key];
+                cout << action << rule << "\t";
+            } else {
+                cout << "\t";
+            }
+        }
+
+        for (const Symbol &symbol : headSymbols) {
+            pair<int, string> key = make_pair(state->getId(), symbol.getName());
+            string action = actionTable[key];
+            const State *nextState = stateTable[key];
+
+            if (nextState)
+                cout << action << nextState->getId() << "\t";
+            else cout << "\t";
+        }
+
+        cout << "\n";
+    }
+    */
+
+    
+    const State *currState = startingState;
+    
+    vector<Token> inputTokens = {EM};
+    
+    stack<int> stateIdStack;
+    queue<Token> tokenQueue;
+
+    stateIdStack.push(startingState->getId());
+    for (const Token &token : inputTokens) {
+        tokenQueue.push(token);
+    }
+
+    Token a = tokenQueue.front();
+    while (true) {
+        int topStateId = stateIdStack.top();
+        pair<int, string> key = make_pair(topStateId, a.getName());
+        if (actionTable[key] == "s") {
+            int nextStateId = stateTable[key]->getId();
+            stateIdStack.push(nextStateId);
+            tokenQueue.pop();
+            a = tokenQueue.front();
+            cout << "shift\n";
+        } else if (actionTable[key] == "r") {
+            if (ruleTable[key] == 0) {
+                cout << "accepted\n";
+                break;
+            } else {
+                Item item = g.getItems()[ruleTable[key]];
+                for (int i = 0; i < item.getBody().size(); ++i)
+                    stateIdStack.pop();
+                int newTopStateId = stateIdStack.top();
+                pair<int, string> newKey = make_pair(newTopStateId, item.getHead().getName());
+                stateIdStack.push(stateTable[newKey]->getId());
+                cout << "reduce by " << item << "\n";
+            }
+        } else {
+            cerr << "error\n";
+            break;
+        }
+    }
+
+    return 0;
+}
